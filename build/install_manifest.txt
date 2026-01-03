@@ -1,0 +1,5 @@
+/usr/local/include/fcwt.h
+/usr/local/lib/libfCWT.so.2.0
+/usr/local/lib/libfCWT.so
+/usr/local/share/fcwt/cmake/fCWT-config.cmake
+/usr/local/share/fcwt/cmake/fCWT-config-release.cmake

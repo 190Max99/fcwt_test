@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC -mavx -O2 -fopenmp -O3 -DNDEBUG CMakeFiles/fCWT_example.dir/src/fcwt/fcwt.cpp.o CMakeFiles/fCWT_example.dir/src/main.cpp.o -o fCWT_example   -L/home/yibo/fCWT  -Wl,-rpath,/home/yibo/fCWT:/home/yibo/fCWT/libs -lm ../libs/libfftw3fl.so ../libs/libfftw3f_ompl.so 

@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC  -fPIC -mavx -O2 -fopenmp -O3 -DNDEBUG -shared -Wl,-soname,libfCWT.so.2.0 -o libfCWT.so.2.0 CMakeFiles/fCWT.dir/src/fcwt/fcwt.cpp.o   -L/home/yibo/fCWT  -Wl,-rpath,/home/yibo/fCWT:/home/yibo/fCWT/libs: -lm ../libs/libfftw3fl.so ../libs/libfftw3f_ompl.so 
