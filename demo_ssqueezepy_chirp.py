@@ -1,59 +1,57 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ssqueezepy import ssq_cwt, cwt, Wavelet
+from ssqueezepy import ssq_cwt, cwt, Wavelet, imshow
 from ssqueezepy.experimental import scale_to_freq
 
-# 1) 生成 chirp（和你之前 fcwt 的写法风格一致）
+# ----------------------------
+# 1) 生成 chirp（保持你原始写法风格）
+# ----------------------------
 fs = 1000
-duration = 10  # 想和你之前一样就改成 100（会更慢）
-n = fs * duration
-ts = np.arange(n)
+n = fs * 100
+ts = np.arange(n, dtype=np.float64)
 t = ts / fs
 
-x = np.sin(2*np.pi*((1 + (20*ts)/n) * (ts/fs)))  # 你之前的公式
+f0, f1 = 1, 100
+A = (f1 - f0) / 2
+x = np.sin(2*np.pi * ((f0 + (A*ts)/n) * (ts/fs)))
 
+# ----------------------------
 # 2) CWT
+# ----------------------------
 wavelet = Wavelet()  # 默认小波
 Wx, scales = cwt(x, wavelet=wavelet)
-freqs_hz = scale_to_freq(scales, wavelet, N=len(x), fs=fs)
 
-# 3) SSQ-CWT（同步挤压）
+# scales -> Hz（注意：这个 freq 轴通常是非均匀的）
+freqs_cwt = scale_to_freq(scales, wavelet, N=len(x), fs=fs)
+
+# ----------------------------
+# 3) SSQ-CWT
+# ----------------------------
 Tx, Wx2, ssq_freqs, scales2, *_ = ssq_cwt(x, wavelet=wavelet)
 
-def plot_tf(M, freqs, title):
-    M = np.abs(M)
-    freqs = np.asarray(freqs)
+# ssq_freqs 有时可能是 cycles/sample，这里自适应转 Hz
+ssq_freqs = np.asarray(ssq_freqs)
+if ssq_freqs.max() <= 1.0:
+    ssq_freqs = ssq_freqs * fs
 
-    # 某些情况下 ssq_freqs 可能是 cycles/sample，这里自适应转 Hz
-    if freqs.max() <= 1.0:
-        freqs = freqs * fs
-
-    # 排序 + 只显示 1~101 Hz（跟你之前一致）
-    idx = np.argsort(freqs)
-    freqs = freqs[idx]
-    M = M[idx, :]
-
-    band = (freqs >= 1) & (freqs <= 101)
-    freqs2 = freqs[band]
-    M2 = M[band, :]
-
-    plt.figure(figsize=(10, 4))
-    plt.imshow(M2, aspect="auto", origin="lower",
-               extent=[t[0], t[-1], freqs2[0], freqs2[-1]])
-    plt.xlabel("Time (s)")
-    plt.ylabel("Frequency (Hz)")
-    plt.title(title)
-    plt.colorbar(label="|coef|")
-    plt.tight_layout()
-
+# ----------------------------
+# 4) 画图（正确时间轴 + 正确频率轴）
+# ----------------------------
 plt.figure(figsize=(10, 2.5))
 plt.plot(t, x)
 plt.title("Chirp signal")
 plt.xlabel("Time (s)")
 plt.tight_layout()
 
-plot_tf(Wx, freqs_hz, "CWT (ssqueezepy)")
-plot_tf(Tx, ssq_freqs, "SSQ-CWT (ssqueezepy)")
+# 只显示关心频段
+band_cwt = (freqs_cwt >= f0) & (freqs_cwt <= f1)
+band_ssq = (ssq_freqs >= f0) & (ssq_freqs <= f1)
+
+# ssqueezepy 自带 imshow：用 yticks 传入真实频率轴，避免 extent 拉歪
+ikw = dict(abs=1, xticks=t, xlabel="Time (s)", ylabel="Frequency (Hz)")
+
+imshow(Wx[band_cwt], **ikw, yticks=freqs_cwt[band_cwt], title="CWT (ssqueezepy)")
+imshow(Tx[band_ssq], **ikw, yticks=ssq_freqs[band_ssq], title="SSQ-CWT (ssqueezepy)")
 
 plt.show()
